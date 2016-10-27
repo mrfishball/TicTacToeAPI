@@ -1,4 +1,4 @@
-#App Engine Endpoints Tic-Tac-Toe Python
+#A Tic-Tac-Toe API(Google App Engine, Google Endpoints, Python)
 
 ## Set-Up Instructions:
 1.  Update the value of application in app.yaml to the app ID you have registered
