@@ -9,6 +9,7 @@ class GameForm(messages.Message):
     oppoent_name = messages.StringField(5, required=True)
     next_turn = messages.StringField(6, required=True)
     start_date = messages.StringField(7, required=True)
+    message = messages.StringField(8, required=True)
 
 class GameForms(message.Message):
     items = messages.MessageField(GameForm, 1, repeated=True)

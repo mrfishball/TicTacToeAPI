@@ -21,7 +21,7 @@ class SendReminderEmail(webapp2.RequestHandler):
         players = Player.query(player.email != None)
         for player in players:
             games = Game.query(ndb.OR(Game.host == user.key,
-                                      Game.oppoent == user.key)).filter(Game.status == "Active")
+                                      Game.oppoent == user.key)).filter(Game.status == 0)
             if games.count() > 0:
                 subject = 'This is a reminder!'
                 body = 'Hi {}, you have {} games in progress. Their keys are: {}.'.format(player.name,

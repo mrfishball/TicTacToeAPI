@@ -54,26 +54,26 @@ def pretty_date(time=False):
 
     if day_diff == 0:
         if second_diff < 10:
-            return "Just now"
+            return 'Just now'
         if second_diff < 60:
-            return str(second_diff) + " seconds ago"
+            return str(second_diff) + ' seconds ago'
         if second_diff < 120:
-            return "A minute ago"
+            return 'A minute ago'
         if second_diff < 3600:
-            return str(second_diff / 60) + " minutes ago"
+            return str(second_diff / 60) + ' minutes ago'
         if second_diff < 7200:
-            return "An hour ago"
+            return 'An hour ago'
         if second_diff < 86400:
-            return str(second_diff / 3600) + " hours ago"
+            return str(second_diff / 3600) + ' hours ago'
     if day_diff == 1:
-        return "Yesterday"
+        return 'Yesterday'
     if day_diff < 7:
-        return str(day_diff) + " days ago"
+        return str(day_diff) + ' days ago'
     if day_diff < 31:
-        return str(day_diff / 7) + " weeks ago"
+        return str(day_diff / 7) + ' weeks ago'
     if day_diff < 365:
-        return str(day_diff / 30) + " months ago"
-    return str(day_diff / 365) + " years ago"
+        return str(day_diff / 30) + ' months ago'
+    return str(day_diff / 365) + ' years ago'
 
 def check_winner(moves):
     """Check against all possible win patterns to see if player has won or not"""
