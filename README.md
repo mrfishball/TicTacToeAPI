@@ -1,4 +1,4 @@
-#Full Stack Nanodegree Project 4 Refresh
+#App Engine Endpoints Tic-Tac-Toe Python
 
 ## Set-Up Instructions:
 1.  Update the value of application in app.yaml to the app ID you have registered
