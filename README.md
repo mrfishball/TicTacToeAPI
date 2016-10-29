@@ -15,9 +15,7 @@ Tic-Tac-Toe is a paper-and-pencil game for two players, X and O, who take turns 
 Each game begins with a list of numbers (1-9) inclusively. The first, second and third row of a 3 x 3 matrix are represented by
 a group of numbers 1 to 3, 4 to 6 and 7 to 9 respectively.
 
-[1, 2, 3 \
-4, 5, 6 \
-7, 8, 9] \
+[1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 Many different Tic-Tac-Toe games can be played by any 2 players at any
 given time. (No same 2 players can have more than 1 active game.)
