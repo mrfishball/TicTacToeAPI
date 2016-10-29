@@ -36,8 +36,6 @@ class ScoreForm(messages.Message):
     end_date = messages.StringField(5, required=True)
     game = messages.StringField(6, required=True)
 
-
-
 class ScoreForms(messages.Message):
     """Return multiple ScoreForms"""
     items = messages.MessageField(ScoreForm, 1, repeated=True)

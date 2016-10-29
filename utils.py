@@ -87,3 +87,9 @@ def check_winner(moves):
     else:
         return False
 
+def check_full(moves):
+    if len(moves) > 0:
+        return False
+    else:
+        return True
+

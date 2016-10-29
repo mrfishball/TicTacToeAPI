@@ -6,7 +6,7 @@ import random
 from datetime import datetime
 from google.appengine.ext import ndb
 from forms import UserForm, GameForm, ScoreForm
-from utils import pretty_date, check_winner
+from utils import pretty_date
 
 """Enumeration for the status of a game."""
 class GameState:
@@ -78,6 +78,19 @@ class Game(ndb.Model):
         game.put()
         return game
 
+    def check_player(self, player):
+        """Check if the player is in the game"""
+        return player == self.host.key or player == self.oppoent.key
+
+    def check_player_turn(self, player):
+        return player == self.next_turn.key
+
+    def is_host(self, player):
+        return player == self.host.key
+
+    def is_oppoent(self, player):
+        return player == self.oppoent.key
+
     def to_form(self):
         """Returns a GameForm representation of the Game"""
         status_list = ['Active', 'Completed']
@@ -92,13 +105,28 @@ class Game(ndb.Model):
             start_date = date_start)
         return form
 
-    def end_game(self, winner=False):
+    def end_game(self, player=None, forfeit=False):
         """Ends the game - if won is True, the player won. - if won is False,
         the player lost."""
         self.status = GameState.Completed
         self.put()
-        # Add the game to the score 'board'
-        score = Score(game = self, host=self.host, host_result = GameResult.Tied,
+        if player:
+            if not forfeit:
+                if self.is_host(player):
+                    score = Score(game = self.key, host=self.host, host_result = GameResult.Won,
+                    oppoent = self.oppoent, oppoent_result = GameResult.Lost)
+                else self.is_oppoent(player):
+                    score = Score(game = self.key, host=self.host, host_result = GameResult.Lost,
+                    oppoent = self.oppoent, oppoent_result = GameResult.Won)
+            else:
+                if self.is_host(player):
+                    score = Score(game = self.key, host=self.host, host_result = GameResult.Lost,
+                    oppoent = self.oppoent, oppoent_result = GameResult.Won)
+                else self.is_oppoent(player):
+                    score = Score(game = self.key, host=self.host, host_result = GameResult.Won,
+                    oppoent = self.oppoent, oppoent_result = GameResult.Lost)
+        else:
+            score = Score(game = self.key, host=self.host, host_result = GameResult.Tied,
             oppoent = self.oppoent, oppoent_result = GameResult.Tied)
         score.put()
 

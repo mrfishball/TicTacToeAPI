@@ -11,13 +11,17 @@
  
  
 ##Game Description:
-Guess a number is a simple guessing game. Each game begins with a random 'target'
-number between the minimum and maximum values provided, and a maximum number of
-'attempts'. 'Guesses' are sent to the `make_move` endpoint which will reply
-with either: 'too low', 'too high', 'you win', or 'game over' (if the maximum
-number of attempts is reached).
-Many different Guess a Number games can be played by many different Users at any
-given time. Each game can be retrieved or played by using the path parameter
+Tic-Tac-Toe is a paper-and-pencil game for two players, X and O, who take turns marking the spaces in a 3×3 grid. The player who succeeds in placing three of their marks in a horizontal, vertical, or diagonal row wins the game.
+Each game begins with a list of numbers (1-9) inclusively. The first, second and third row of a 3 x 3 matrix are represented by
+a group of numbers 1 to 3, 4 to 6 and 7 to 9 respectively.
+
+[1, 2, 3
+4, 5, 6
+7, 8, 9]
+
+Many different Tic-Tac-Toe games can be played by any 2 players at any
+given time. (No same 2 players can have more than 1 active game.)
+Each game can be retrieved or played by using the path parameter
 `urlsafe_game_key`.
 
 ##Files Included:
@@ -25,8 +29,9 @@ given time. Each game can be retrieved or played by using the path parameter
  - app.yaml: App configuration.
  - cron.yaml: Cronjob configuration.
  - main.py: Handler for taskqueue handler.
- - models.py: Entity and message definitions including helper methods.
- - utils.py: Helper function for retrieving ndb.Models by urlsafe Key string.
+ - models.py: Entity definitions including helper methods.
+ - forms.py: Message definitions.
+ - utils.py: Helper functions for retrieving ndb.Models by urlsafe Key string, win condition checker and remaining move checker.
 
 ##Endpoints Included:
  - **create_user**
@@ -34,18 +39,17 @@ given time. Each game can be retrieved or played by using the path parameter
     - Method: POST
     - Parameters: user_name, email (optional)
     - Returns: Message confirming creation of the User.
-    - Description: Creates a new User. user_name provided must be unique. Will 
-    raise a ConflictException if a User with that user_name already exists.
+    - Description: Creates a new User. player_name and email provided must be unique. Will 
+    raise a ConflictException if a player with that player_name or email already exists.
     
  - **new_game**
     - Path: 'game'
     - Method: POST
     - Parameters: user_name, min, max, attempts
     - Returns: GameForm with initial game state.
-    - Description: Creates a new Game. user_name provided must correspond to an
-    existing user - will raise a NotFoundException if not. Min must be less than
-    max. Also adds a task to a task queue to update the average moves remaining
-    for active games.
+    - Description: Creates a new Game. player_name provided must correspond to an
+    existing user - will raise a NotFoundException if not. Raisea ConflictException if an active game for the same 2 players(host and oppoent)
+    is found.
      
  - **get_game**
     - Path: 'game/{urlsafe_game_key}'
@@ -53,60 +57,69 @@ given time. Each game can be retrieved or played by using the path parameter
     - Parameters: urlsafe_game_key
     - Returns: GameForm with current game state.
     - Description: Returns the current state of a game.
-    
+
+ - **forfeit_game**
+    - Path: 'game/{urlsafe_game_key}/forfeit'
+    - Method: GET
+    - Parameters: urlsafe_game_key, player_name
+    - Returns: StringMessage.
+    - Description: Mark the game as Completed. The player who forfeits will lose the game while the other player will
+    automatically win the game. Email notfications will be sent as well
+
  - **make_move**
     - Path: 'game/{urlsafe_game_key}'
     - Method: PUT
-    - Parameters: urlsafe_game_key, guess
+    - Parameters: urlsafe_game_key, player's name and move
     - Returns: GameForm with new game state.
-    - Description: Accepts a 'guess' and returns the updated state of the game.
-    If this causes a game to end, a corresponding Score entity will be created.
+    - Description: With game, player and player's turn validated, a move will be accepted and an updated state of the game will be returned. A move is a number from 1 - 9 on the setup, corresponding to one of the possible positions on the setup. If this causes a game to end, a corresponding Score entity will be created.
     
- - **get_scores**
-    - Path: 'scores'
+ - **get_player_rankings**
+    - Path: 'rankings'
     - Method: GET
-    - Parameters: None
-    - Returns: ScoreForms.
-    - Description: Returns all Scores in the database (unordered).
+    - Parameters: none
+    - Returns: UserForms.
+    - Description: Returns a list of players in the database with at least one gameplay ordered by win rate (number of game won x 100 / number of game played).
     
- - **get_user_scores**
+ - **get_player_scores**
     - Path: 'scores/user/{user_name}'
     - Method: GET
-    - Parameters: user_name
+    - Parameters: player_name
     - Returns: ScoreForms. 
     - Description: Returns all Scores recorded by the provided player (unordered).
     Will raise a NotFoundException if the User does not exist.
     
- - **get_active_game_count**
-    - Path: 'games/active'
+ - **get_game_history**
+    - Path: 'game/{urlsafe_game_key}/history'
     - Method: GET
-    - Parameters: None
+    - Parameters: urlsafe_game_key
     - Returns: StringMessage
-    - Description: Gets the average number of attempts remaining for all games
-    from a previously cached memcache key.
+    - Description: Gets the history of a game (Players' moves).
 
 ##Models Included:
- - **User**
-    - Stores unique user_name and (optional) email address.
+ - **Player**
+    - Stores unique player_name and email address. Optional fields (default to 0) such as number of games played and won.
     
  - **Game**
-    - Stores unique game states. Associated with User model via KeyProperty.
+    - Stores unique game states. Associated with Player model via KeyProperty.
     
  - **Score**
-    - Records completed games. Associated with Users model via KeyProperty.
+    - Records completed games. Associated with Player model via KeyProperty.
     
 ##Forms Included:
  - **GameForm**
-    - Representation of a Game's state (urlsafe_key, attempts_remaining,
-    game_over flag, message, user_name).
+    - Representation of a Game's state (urlsafe_key, setup,
+    status, host, oppoent, date, next_turn).
  - **NewGameForm**
-    - Used to create a new game (user_name, min, max, attempts)
+    - Used to create a new game (host_name, oppoent_name)
  - **MakeMoveForm**
-    - Inbound make move form (guess).
+    - Inbound make move form (player_name, move).
  - **ScoreForm**
-    - Representation of a completed game's Score (user_name, date, won flag,
-    guesses).
+    - Representation of a completed game's Score (urlsafe_key, host_name, host_result, oppoent_name, oppoent_result, date).
  - **ScoreForms**
     - Multiple ScoreForm container.
+ - **UserForm**
+    - Representation of a Player (urlsafe_key, host_name, host_result, oppoent_name, oppoent_result, date).
+ - **UserForms**
+    - Multiple UserForm container.
  - **StringMessage**
     - General purpose String container.
