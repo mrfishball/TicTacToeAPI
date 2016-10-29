@@ -57,7 +57,7 @@ class SendForfeitEmail(webapp2.RequestHandler):
         player = get_by_urlsafe(self.request.get('player_key'), Player)
         game = get_by_urlsafe(self.request.get('game_key'), Game)
         subject = 'A Tic-Tac-Toe Game - It\'s your turn!'
-        body = 'Hi {}, You\' oppoent has surrendered!.'\
+        body = 'Hi {}, Your oppoent has surrendered!.'\
         ' The game key is: {}'.format(player.name, game.key.urlsafe())
         logging.debug(body)
         mail.send_mail('noreply@{}.appspotmail.com'.
@@ -82,10 +82,25 @@ class SendCongratsEmail(webapp2.RequestHandler):
                        player.email,
                        subject, body)
 
+class SendFinishEmail(webapp2.RequestHandler):
+    def post(self):
+        """Send email to the winning player comparing their score to average."""
+        player = get_by_urlsafe(self.request.get('player_key'), Player)
+        game = get_by_urlsafe(self.request.get('game_key'), Game)
+        subject = 'It\'s a tie!'
+        body = 'The game {} has tied!'\
+                'Thank you for playing!'.format(game.key.urlsafe())
+        logging.debug(body)
+        mail.send_mail('noreply@{}.appspotmail.com'.
+                       format(app_id),
+                       player.email,
+                       subject, body)
+
 
 app = webapp2.WSGIApplication([
     ('/crons/send_reminder', SendReminderEmail),
     ('/tasks/send_move_email', SendMoveEmail),
     ('/tasks/send_congrats_mail', SendCongratsEmail),
-    ('/task/send_forfeit_email', SendForfeitEmail)
+    ('/task/send_forfeit_email', SendForfeitEmail),
+    ('/task/send_finish_email', SendFinishEmail)
 ], debug=True)

@@ -169,7 +169,13 @@ class TicTacToeApi(remote.Service):
 
         if check_full(game.setup):
             game.end_game()
-            msg = 'Thank you for playing!'
+            msg = 'It\'s a tie! Thank you for playing!'
+            taskqueue.add(url='/tasks/send_finish_email',
+                          params={'user_key': game.next_turn.urlsafe(),
+                                  'game_key': game.key.urlsafe()})
+            taskqueue.add(url='/tasks/send_finish_email',
+                          params={'user_key': player.urlsafe(),
+                                  'game_key': game.key.urlsafe()})
         else:
             # If game is still ongoing, send remainder email to player
             taskqueue.add(url='/tasks/send_congrats_email',
