@@ -1,37 +1,37 @@
 Why [1-9], but not the actually game board layout?
 
 -I chose to use PickleProperty to store the game setup, [1-9] in a list for easier access to the core data
-that is perhaps the single most important piece of data for the program's execution.
+	that is perhaps the single most important piece of data for the program's execution.
 
-Instead of keeping a game board in the database, I'm leaving the design of the game board to the UI desginer or
-Front-End Developer. The way it works is that a player will choose a spot on the board (number 1-9), the make_move
-endpoint will find the number(move) in the setup list, if exists, that number will be added to the player's moves list
-then the same number in the setup will be deleted. In order to make sure the right number in the setup to be removed,
-the position(index) of the number in the list will be obtained first.
+	Instead of keeping a game board in the database, I'm leaving the design of the game board to the UI desginer or
+	Front-End Developer. The way it works is that a player will choose a spot on the board (number 1-9), the make_move
+	endpoint will find the number(move) in the setup list, if exists, that number will be added to the player's moves list
+	then the same number in the setup will be deleted. In order to make sure the right number in the setup to be removed,
+	the position(index) of the number in the list will be obtained first.
 
 Why naming the players 'host' and 'oppoent'?
 
-FOr general purposes it's easier to differentiate the players but ultimately this dicision came to me
-as a stepping stone to the invite system where the player who initialize a game will be the host,
-an invitation or a challenge request will be sent to the 2nd player who will then become the 'oppoent'
+-For general purposes it's easier to differentiate the players but ultimately this dicision came to me
+	as a stepping stone to the invite system where the player who initialize a game will be the host,
+	an invitation or a challenge request will be sent to the 2nd player who will then become the 'oppoent'
 
-How come you don't keep points for each player?
+	How come you don't keep points for each player?
 
-For the score keeping mechanism, I opted for a simply approach where players will be ranked by the win rate
-instead of a point system given that the player has at least one game played. The Score table will keep a record
-of every game, with the result for the host and for the oppoent. Also the point system doesn't make sense for a game
-like tic tac toe.
+	For the score keeping mechanism, I opted for a simply approach where players will be ranked by the win rate
+	instead of a point system given that the player has at least one game played. The Score table will keep a record
+	of every game, with the result for the host and for the oppoent. Also the point system doesn't make sense for a game
+	like tic tac toe.
 
 What is the purpose of the pretty_date function?
 
-For better experience, I wrote a custom class called pretty_date to output a more relevant date string such as
-'Just now', '2 days ago' etc. The date in the database is just a regular datetime object, whenever the data is being
-feed to the form, the datetime object will be passed to the pretty_date function where a prettier date string is produced.
+-For better experience, I wrote a custom class called pretty_date to output a more relevant date string such as
+	'Just now', '2 days ago' etc. The date in the database is just a regular datetime object, whenever the data is being
+	feed to the form, the datetime object will be passed to the pretty_date function where a prettier date string is produced.
 
 Can you explain how the end_game function works?
 
-The 'end game' mechanism should account for 3 possibilities: a tied game, a win/lost game and a surrender type(win/lost as well).
-A tied game - when the end_game function is being called with no parameter.
-A win/lost - when the end_game function is being called with the winner's name as the only parameter.
-A surrender - when the end_game function is being called with 2 parameters: the surrenderer's name and 'forfeit' set to true.
-the surrenderer will automatically lose the game while the other player will be pronounced winner.
+-The 'end game' mechanism should account for 3 possibilities: a tied game, a win/lost game and a surrender type(win/lost as well).
+	A tied game - when the end_game function is being called with no parameter.
+	A win/lost - when the end_game function is being called with the winner's name as the only parameter.
+	A surrender - when the end_game function is being called with 2 parameters: the surrenderer's name and 'forfeit' set to true.
+	the surrenderer will automatically lose the game while the other player will be pronounced winner.
