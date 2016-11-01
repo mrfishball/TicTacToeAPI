@@ -8,11 +8,13 @@ from google.appengine.ext import ndb
 from forms import UserForm, GameForm, ScoreForm
 from utils import pretty_date
 
-"""Enumeration for the status of a game."""
+
 class GameState:
-    Active, Completed= range(2)
+    """Enumeration for the status of a game."""
+    Active, Completed= range(2)
 
 class GameResult:
+     """Enumeration for the status of a game of individual player."""
     Won, Tied, Lost, Forfeit = range(4)
 
 class Player(ndb.Model):
@@ -43,8 +45,8 @@ class Player(ndb.Model):
     def get_player_by_email(cls, email):
         return Player.query(Player.email = email).get()
 
-    """Adds to the to total number of game won"""
     def add_won(self):
+    """Adds to the to total number of game won"""
         self.won += 1
         self.put()
 
@@ -131,6 +133,7 @@ class Game(ndb.Model):
         score.put()
 
 class Score(ndb.Model):
+    """Score object"""
     game = ndb.KeyProperty(kind='Game', required=True)
     host = ndb.KeyProperty(kind='Player', required=True)
     host_result = ndb.IntegerProperty(required=True)
@@ -150,5 +153,4 @@ class Score(ndb.Model):
             oppoent_name = self.oppoent.get().name,
             oppoent_result = oppoent_status,
             end_date = date_end,
-            game = self.game.urlsafe()
-            )
+            game = self.game.urlsafe())

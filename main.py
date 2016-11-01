@@ -28,8 +28,8 @@ class SendReminderEmail(webapp2.RequestHandler):
                            games.count(),
                            '\n'.join(game.key.urlsafe() for game in games))
                 logging.debug(body)
-                # This will send test emails, the arguments to send_mail are:
-                # from, to, subject, body
+                """This will send test emails, the arguments to send_mail are:
+                from, to, subject, body"""
                 mail.send_mail('noreply@{}.appspotmail.com'.
                                format(app_id),
                                player.email,

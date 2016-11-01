@@ -88,6 +88,7 @@ def check_winner(moves):
         return False
 
 def check_full(moves):
+    """Check is the borad is empty"""
     if len(moves) > 0:
         return False
     else:

@@ -22,13 +22,17 @@ GET_GAME_REQUEST = endpoints.ResourceContainer(
 MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
     MakeMoveForm,
     urlsafe_game_key=messages.StringField(1),)
-NEW_PLAYER_REQUEST = endpoints.ResourceContainer(player_name=messages.StringField(1),
-                                           email=messages.StringField(2))
-PLAYER_REQUEST = endpoints.ResourceContainer(player_name=messages.StringField(1))
-FORFEIT_REQUEST = endpoints.ResourceContainer(urlsafe_game_key=messages.StringField(1),
-  player_name=messages.StringField(2))
+NEW_PLAYER_REQUEST = endpoints.ResourceContainer(
+    player_name=messages.StringField(1),
+    email=messages.StringField(2))
+PLAYER_REQUEST = endpoints.ResourceContainer(
+    player_name=messages.StringField(1))
+FORFEIT_REQUEST = endpoints.ResourceContainer(
+    urlsafe_game_key=messages.StringField(1),
+    player_name=messages.StringField(2))
 
-@endpoints.api(name='Tic-Tac-Toe', version='v1')
+
+@endpoints.api(name='Tic-Tac-Toe', version='v1')
 class TicTacToeApi(remote.Service):
     """Game API"""
     @endpoints.method(request_message=NEW_PLAYER_REQUEST,
@@ -41,19 +45,19 @@ class TicTacToeApi(remote.Service):
         if Player.get_player_by_name(request.player_name):
             raise endpoints.ConflictException(
                     'A Player with that name already exists!')
-        
+
         if mail.is_email_valid(request.email):
-          if Player.get_player_by_email(request.email):
-            raise endpoints.ConfictException(
+            if Player.get_player_by_email(request.email):
+                raise endpoints.ConfictException(
                     'A Player with that email already exists!')
-          else:
-            player = Player(name=request.player_name, email=request.email)
-            player.put()
-            return StringMessage(message='Player {} created!'.format(
+            else:
+                player = Player(name=request.player_name, email=request.email)
+                player.put()
+                return StringMessage(message='Player {} created!'.format(
                     request.player_name))
         else:
-          raise endpoints.BadRequestException("Please enter a valid email address!")
-
+            raise endpoints.BadRequestException(
+                "Please enter a valid email address!")
 
     @endpoints.method(request_message=NEW_GAME_REQUEST,
                       response_message=GameForm,
@@ -66,16 +70,19 @@ class TicTacToeApi(remote.Service):
         oppoent = Player.get_player_by_name(request.oppoent_name)
 
         if host and oppoent:
-          games = Game.query(ndb.AND(Game.host == host.key),
-            (Game.oppoent == oppoent.key)).filter(Game.status == 0)
-          if games:
-            raise endpoints.ConflictException('A game is currently in session! Please finish it before starting a new game.')
-          try:
-              game = Game.new_game(host.key, oppoent.key)
-          except ValueError:
-              raise endpoints.BadRequestException('An error has occurred! Please try again')
+            games = Game.query(
+                ndb.AND(Game.host == host.key),
+                (Game.oppoent == oppoent.key)).filter(Game.status == 0)
+            if games:
+                raise endpoints.ConflictException(
+                    'A game is currently in session!')
+            try:
+                game = Game.new_game(host.key, oppoent.key)
+            except ValueError:
+                raise endpoints.BadRequestException(
+                    'An error has occurred! Please try again')
         else:
-          raise endpoints.NotFoundException(
+            raise endpoints.NotFoundException(
                     'A minimum of 2 players is required!')
         return game.to_form('Good luck!')
 
@@ -90,7 +97,8 @@ class TicTacToeApi(remote.Service):
         if game:
             return game.to_form('Ready to make a move?')
         else:
-            raise endpoints.NotFoundException('Game not found! Please try again or start a new game.')
+            raise endpoints.NotFoundException(
+                'Game not found! Please try again or start a new game.')
 
     @endpoints.method(request_message=FORFEIT_REQUEST,
                       response_message=StringMessage,
@@ -103,16 +111,21 @@ class TicTacToeApi(remote.Service):
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         player = Player.get_player_by_name(request.player_name)
         if game and player:
-          game.end_game(player, True)
-          taskqueue.add(url='/tasks/send_forfeit_email',
-                        params={'user_key': game.next_turn.urlsafe(),
-                                'game_key': game.key.urlsafe()})
-          taskqueue.add(url='/tasks/send_congrats_email',
-                        params={'user_key': game.next_turn.urlsafe(),
-                                'game_key': game.key.urlsafe()})
-          return StringMessage(message=('You have forfeited the game {}.'.format(request.urlsafe_game_key)))
+            game.end_game(player, True)
+            taskqueue.add(url='/tasks/send_forfeit_email', params={
+                'user_key': game.next_turn.urlsafe(),
+                'game_key': game.key.urlsafe()})
+
+            taskqueue.add(url='/tasks/send_congrats_email', params={
+                'user_key': game.next_turn.urlsafe(),
+                'game_key': game.key.urlsafe()})
+
+            return StringMessage(message=(
+                'You have forfeited the game {}.'
+                .format(request.urlsafe_game_key)))
         else:
-          raise NotFoundException('Game / Player not found! Please try again later.')
+            raise NotFoundException(
+                'Game / Player not found! Please try again later.')
 
     @endpoints.method(request_message=MAKE_MOVE_REQUEST,
                       response_message=GameForm,
@@ -137,31 +150,30 @@ class TicTacToeApi(remote.Service):
                             game.host_moves.append(move)
                             if check_winner(game.host_moves):
                                 game.end_game(player)
-                                taskqueue.add(url='/tasks/send_congrats_email',
-                                              params={'user_key': game.host.urlsafe(),
-                                                      'game_key': game.key.urlsafe()})
+                                taskqueue.add(url='/tasks/send_congrats_email', params={
+                                    'user_key': game.host.urlsafe(),
+                                    'game_key': game.key.urlsafe()})
                             else:
-                              game.next_turn = game.oppoent
+                                game.next_turn = game.oppoent
 
                         if game.is_oppoent(player):
                             game.oppoent_moves.append(move)
                             if check_winner(game.oppoent_moves):
                                 game.end_game(player)
                                 taskqueue.add(url='/tasks/send_congrats_email',
-                                              params={'user_key': game.oppoent.urlsafe(),
-                                                      'game_key': game.key.urlsafe()})
+                                        params={'user_key': game.oppoent.urlsafe(),
+                                                'game_key': game.key.urlsafe()})
                             else:
-                              game.next_turn = game.host
+                                game.next_turn = game.host
 
                     else:
                         msg = 'Your oppoent has taken this spot. Please try again'
                 else:
                     msg = 'Invalid move! Please choose a number (1-9).'
-
             else:
                 raise endpoints.ConflictException('Please wait until your turn to make a move!')
         else:
-              raise endpoints.NotFoundException('Player not current game session!')
+            raise endpoints.NotFoundException('Player not current game session!')
 
         position = game.setup.index(move)
         del game.setup[position]
@@ -191,9 +203,7 @@ class TicTacToeApi(remote.Service):
         """Return a list of players ranked"""
         players.query(Player.played > 0).fetch()
         players = sorted(players, key=lambda x: x.get_win_rate, reverse=True)
-
         return UserForms(items=[player.to_form() for player in players])
-
 
     @endpoints.method(request_message=PLAYER_REQUEST,
                       response_message=ScoreForms,
@@ -206,8 +216,9 @@ class TicTacToeApi(remote.Service):
         if not player:
             raise endpoints.NotFoundException(
                     'A Player with that name does not exist!')
-        scores = Score.query(ndb.OR(Score.host == player.key),
-                              (Score.oppoent == player.key)).fetch()
+        scores = Score.query(
+            ndb.OR(Score.host == player.key),
+            (Score.oppoent == player.key)).fetch()
         return ScoreForms(items=[score.to_form() for score in scores])
 
     @endpoints.method(request_message=GET_GAME_REQUEST,
